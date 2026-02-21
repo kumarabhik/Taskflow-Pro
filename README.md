@@ -1,289 +1,262 @@
 # TaskFlow Pro
 
-**AI‑Powered Task & Inventory Intelligence**
+AI-assisted task planning, team insights, inventory risk alerts, and learning-loop risk prediction using FastAPI + vanilla frontend + file-based storage (CSV/JSON).
 
-A lightweight, dockerized platform that blends AI‑assisted task prioritization, sprint planning, team insights, and inventory alerts — all on top of simple CSV/JSON files (no database).
+## What Is Implemented
 
----
+- Prioritized task scoring based on urgency, impact, dependency pressure, and owner load
+- Sprint planning with `greedy` and `knapsack` planners
+- Inline task and inventory editing from the UI
+- Team insights and velocity forecasting
+- Inventory stockout risk with SMA and Holt linear usage models
+- Event logging, task delay-risk prediction, and model retraining
+- Data quality validation + AI anomaly/follow-up suggestions
+- Lightweight RBAC + API key auth (toggleable)
+- Encrypted per-project collaboration notes
 
-## Features
+## Stack
 
-* **Prioritized Tasks** — Weighted scoring by urgency, impact, dependency pressure, and owner load.
-* **Sprint Planner** — Greedy (fast) and Knapsack (optimal per owner) planners respecting capacity & dependencies.
-* **Team Insights** — Capacity, planned points, utilization %, blockers, and backlog heat.
-* **Inventory Intelligence** — SMA baseline usage, optional Holt linear forecast, and at‑risk alerts.
-* **CSV/JSON I/O** — Import/Export for tasks, members, inventory, reservations, and projects.
-* **Self‑hosted Docs** — Swagger UI proxied at `/api/docs`.
+- Frontend: `frontend/index.html` + `frontend/global.css` (vanilla JS)
+- API: FastAPI (`backend/app.py`)
+- Training script: `backend/train_task_risk.py`
+- Storage: flat files in `data/`
+- Web/proxy: NGINX (`nginx.conf`)
+- Containers: Docker Compose (`docker-compose.yml`)
 
-> **Status:** MVP ✅ — core planning loop works. See **Roadmap (Remaining)** for two small items still open.
+## Project Structure
 
----
-
-## Architecture
-
-* **Frontend:** Single‑page app (`frontend/index.html`) — vanilla HTML/JS, fetch API.
-* **Backend:** Python FastAPI (`backend/app.py`), Uvicorn.
-* **Storage:** Flat files under `./data` (mounted into the API container).
-* **Reverse Proxy:** NGINX serves the SPA and proxies `/api/*` → FastAPI.
-* **Docker:** Two images (`api`, `web`) orchestrated by Compose.
-
-```
-Browser  ──►  NGINX (:8080)
-              ├─ serves / (index.html)
-              └─ proxies /api/* → FastAPI (:8000)
-```
-
----
-
-## Repository Layout
-
-```
+```text
 taskflow-pro/
-├─ backend/
-│  └─ app.py
-├─ data/                       # live CSV/JSON used by the app
-│  ├─ tasks.csv
-│  ├─ members.csv
-│  ├─ inventory.csv
-│  ├─ reservations.csv
-│  └─ projects.json
-├─ data/data-samples/          # sample inputs to import
-│  ├─ tasks.csv
-│  ├─ members.csv
-│  ├─ inventory.csv
-│  ├─ reservations.csv
-│  └─ projects.json
-├─ frontend/
-│  └─ index.html
-├─ nginx.conf
-├─ Dockerfile.api
-├─ Dockerfile.web
-└─ docker-compose.yml
++- backend/
+�  +- app.py
+�  +- train_task_risk.py
+�  +- requirements.txt
++- frontend/
+�  +- index.html
+�  +- global.css
++- data/
+�  +- tasks.csv
+�  +- members.csv
+�  +- inventory.csv
+�  +- reservations.csv
+�  +- projects.json
+�  +- events.csv                     # created as events are logged
+�  +- audit.log                      # created when auth is enabled
+�  +- data-samples/
++- Dockerfile.api
++- Dockerfile.web
++- docker-compose.yml
++- nginx.conf
++- requirements.txt
 ```
 
----
-
-## Setup & Run (Docker)
-
-1. **From the project root**
+## Run With Docker
 
 ```powershell
-# Stop old containers, rebuild, and start fresh
 docker compose down
 docker compose up -d --build
-
-# Verify
 docker compose ps
 ```
 
-2. **Open the app**
+Open:
 
-* Web UI: [http://localhost:8080](http://localhost:8080)
-* API Health (proxied): [http://localhost:8080/api/health](http://localhost:8080/api/health)
-* Swagger Docs (proxied): [http://localhost:8080/api/docs](http://localhost:8080/api/docs)
+- UI: `http://localhost:8080`
+- API health (via NGINX): `http://localhost:8080/api/health`
+- API docs (via NGINX): `http://localhost:8080/api/docs`
 
-> If you open `/api/docs` directly via the proxy, FastAPI must be started with `--root-path /api` (see Compose below).
+Notes:
 
----
+- Current `docker-compose.yml` sets `TF_AUTH=0` (auth disabled for easy local demo)
+- API container mounts `./data` to persist edits and model artifacts
 
-## docker-compose.yml (key bits)
+## Local Python Run (without Docker)
 
-```yaml\ nservices:
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
-    container_name: taskflow-api
-    ports: ["8000:8000"]
-    volumes:
-      - ./data:/app/data
-    command: uvicorn backend.app:app --host 0.0.0.0 --port 8000 --root-path /api
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 10
-
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-    container_name: taskflow-web
-    depends_on:
-      api:
-        condition: service_healthy
-    ports: ["8080:80"]
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r backend/requirements.txt
+uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-> The `--root-path /api` ensures Swagger at `/api/docs` loads its spec from `/api/openapi.json` correctly.
+If you want to use model retraining (`/ai/retrain_task_risk`), also ensure these are installed:
 
----
-
-## NGINX Proxy (nginx.conf)
-
-```nginx
-# Serve the SPA
-location / {
-  try_files $uri /index.html;
-}
-
-# Proxy API
-location /api/ {
-  proxy_pass http://api:8000/;           # 'api' is the Compose service name
-  proxy_set_header Host $host;
-  proxy_set_header X-Real-IP $remote_addr;
-  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  proxy_set_header X-Forwarded-Proto $scheme;
-}
+```powershell
+pip install scikit-learn joblib
 ```
 
----
+## Auth + RBAC
 
-## Frontend API base
+Auth is controlled by environment variable:
 
-In `frontend/index.html`:
+- `TF_AUTH=1` enables auth middleware (default in code)
+- `TF_AUTH=0` disables auth middleware
 
-```html
-<script>
-  const API = new URLSearchParams(location.search).get("api") || "/api";
-</script>
-```
+Optional API keys JSON:
 
-All browser requests go to `/api/*` and are proxied to FastAPI — no CORS issues.
+- `TF_API_KEYS={"admin":"...","user":"...","viewer":"..."}`
 
----
+Headers when auth is enabled:
 
-## Data Schemas
+- `x-api-key`
+- `x-user-email`
+- `x-project-id` (used for project-scoped notes)
 
-**tasks.csv**
+Role resolution comes from `members.csv`:
 
-```
-id,title,project,assignee_email,status,due_date,story_points,impact,dependencies
-T-1000,Design checkout flow,PORTAL,aarav@grapepay.com,In Progress,2025-10-15,3,4,
-T-1001,Integrate UPI QR,PORTAL,aarav@grapepay.com,Todo,2025-10-20,5,5,T-1000
-```
+- Preferred column: `rbac_role` (`viewer | user | admin`)
+- Fallback column: `role` (legacy)
 
-* `due_date`: `YYYY-MM-DD`
-* `dependencies`: comma‑separated task IDs
-* Planner includes statuses: `Todo`, `In Progress`, `Ready`, `Blocked` (case‑insensitive)
+## Core Data Files
 
-**members.csv**
+### `tasks.csv`
 
-```
-email,full_name,role,weekly_capacity
-aarav@grapepay.com,Aarav Sharma,Backend,20
-isha@grapepay.com,Isha Kapoor,Ops,15
-```
+Required fields for planner/scoring:
 
-**inventory.csv**
+- `id,title,project,assignee_email,status,due_date,story_points,impact,dependencies`
 
-```
-sku,name,on_hand,reorder_point,lead_time_days
-POS-TERMINAL,POS Terminal Devices,50,30,10
-```
+Optional field used by velocity forecast:
 
-**reservations.csv**
+- `completed_date` (format `YYYY-MM-DD`)
 
-```
-reservation_id,task_id,sku,qty,planned_date,actual_date
-R-001,T-1000,POS-TERMINAL,5,2025-10-10,2025-10-10
-```
+### `members.csv`
 
-**projects.json**
+Current write schema:
+
+- `email,full_name,job_role,rbac_role,weekly_capacity`
+
+Backward-compatible input still accepted:
+
+- `role` (mapped to `job_role`)
+
+### `inventory.csv`
+
+- `sku,name,on_hand,reorder_point,lead_time_days`
+
+### `reservations.csv`
+
+- `reservation_id,task_id,sku,qty,planned_date,actual_date`
+
+### `projects.json`
+
+Array of objects:
 
 ```json
-[
-  {"key":"PORTAL","name":"Merchant Portal"},
-  {"key":"OPS","name":"Operations"},
-  {"key":"QA","name":"Quality Assurance"}
-]
+[{"key":"PORTAL","name":"Merchant Portal"}]
 ```
 
----
+## Main API Endpoints
 
-## API Endpoints (through the proxy)
+### Health and meta
 
-* **Health**: `GET /api/health`
-* **Docs**: `GET /api/docs` (OpenAPI at `/api/openapi.json`)
+- `GET /health`
+- `GET /files`
+- `GET /ai/health`
 
-### Tasks
+### Auth and collaboration
 
-* **List (prioritized)**: `GET /api/tasks/prioritized`
-* **Upsert in bulk**: `POST /api/tasks/upsert_many` (JSON array of rows)
-* **Plan sprint**: `POST /api/tasks/plan_sprint`
+- `GET /auth/whoami`
+- `GET /collab/notes`
+- `POST /collab/notes`
+- `GET /admin/audit_log` (admin)
 
-  * Body example:
+### Import / export
 
-    ```json
-    {"capacity_multiplier":1.0, "include_statuses":["todo","in progress","ready"], "planner":"greedy"}
-    ```
+- `POST /import/{dtype}` where `dtype in {tasks, members, inventory, reservations, projects}`
+  - `members` import is intentionally blocked to prevent overwrite; use `POST /members/upsert_many`
+- `GET /export/{dtype}`
+- `GET /proof_bundle` (zip with events/model/tasks snapshot)
 
-### Data Import/Export
+### Tasks and planning
 
-* **Import (overwrite)**: `POST /api/import/{dtype}` with **multipart/form‑data** `file` field
+- `GET /tasks/prioritized`
+- `POST /tasks/upsert_many`
+- `POST /tasks/delete_many`
+- `POST /tasks/dedupe`
+- `POST /tasks/plan_sprint`
+- `GET /debug/deps`
 
-  * `dtype ∈ { tasks, members, inventory, reservations, projects }`
-* **Export**: `GET /api/export/{dtype}` → CSV/JSON content
-* **Sanity check**: `GET /api/data/validate`
-* **Files info**: `GET /api/files`
+### Members
+
+- `POST /members/upsert_many`
 
 ### Inventory
 
-* **Snapshot**: `GET /api/inventory`
-* **Alerts**: `GET /api/inventory/alerts`
+- `GET /inventory`
+- `GET /inventory/alerts`
+- `GET /inventory/list`
+- `POST /inventory/upsert_many`
 
----
+### Team analytics
 
-## Scoring & Planning (how it works)
+- `POST /team/insights`
+- `GET /team/velocity_forecast`
 
-* **Score** ≈ 0.35·Urgency + 0.25·Impact + 0.20·DepsOpen + 0.15·OwnerLoad (+ Heuristic 0.05)
-* **Greedy planner**: iterate tasks by score; take if capacity allows; respects dependencies.
-* **Knapsack planner**: per owner, maximize total score under capacity; ignores zero‑point tasks.
+### Learning loop and AI helpers
 
-> Tip: Give every in‑scope task `story_points > 0`; the knapsack ignores 0‑point items.
+- `POST /events/log`
+- `GET /events/stats`
+- `GET /export/events`
+- `GET /ai/task_risk`
+- `POST /ai/retrain_task_risk`
+- `GET /ai/anomalies`
+- `GET /ai/followups`
+- `GET /ai/engagement`
 
----
+## UI Sections
 
-## Demo Script (5–7 minutes)
+The SPA includes these panels:
 
-1. Open **/api/docs** (via proxy), import **members**, **tasks**, **inventory**, **reservations** from `data/data-samples/`.
-2. Show **/api/files** and **/api/export/tasks** to confirm live data.
-3. Open the UI (/:8080), **Refresh Prioritized** and explain the score.
-4. **Plan Sprint** (Greedy), then switch to **Knapsack**.
-5. Change a task’s story points in the UI → **Save edits** → Re‑plan.
-6. Show **Inventory Alerts** and how imports change it.
-7. Run **/api/data/validate** → `ok: true`.
+- Home
+- Prioritized Tasks
+- Sprint Plan
+- Inventory
+- Inventory Alerts
+- Team Insights
+- Members
+- Data Checks
+- Collab Notes
 
----
+## Learning Loop Flow
 
-## Troubleshooting
+1. User edits tasks in UI and saves.
+2. UI logs events to `POST /events/log`.
+3. API stores events in `data/events.csv`.
+4. Retrain endpoint runs `backend/train_task_risk.py`.
+5. New model is written to `data/task_risk_model.joblib` (+ meta JSON).
+6. `/ai/task_risk` uses model predictions; falls back to heuristic if model is missing.
 
-* **/api/docs shows a parser error** → ensure API runs with `--root-path /api`.
-* **Members save 404** → button must be `type="button"` or call `e.preventDefault()`; post **FormData** to `/api/import/members` (NOT JSON).
-* **Edits don’t stick** → confirm `POST /api/tasks/upsert_many` returns 200 and `story_points` is numeric; hard‑refresh.
-* **Proxy 404** → check `nginx.conf` has `proxy_pass http://api:8000/;` and Compose service is named `api`.
+## Inventory Risk Logic
 
----
+- Reserved quantities are aggregated from `reservations.csv`
+- Consumption is grouped by date and SKU
+- `GET /inventory` supports:
+  - SMA-based rate (default)
+  - Holt linear rate (`use_ml=true`)
+- `at_risk` is flagged when projected stockout is sooner than `lead_time_days + safety_buffer`
 
-## Roadmap (Remaining)
+## Validation + Anomaly Checks
 
-1. **Members Save UX (tiny fix)**
-   Ensure Save button is `type="button"` (or `e.preventDefault()`), and the handler posts `multipart/form-data` to **`/api/import/members`** so there’s no phantom GET 404 after a successful POST.
+`GET /data/validate` checks:
 
-2. **UI Polish**
+- missing task columns
+- duplicate task IDs
+- invalid `due_date`
+- unknown assignees
+- unknown dependencies
+- non-numeric or negative points/impact
 
-   * Success/error toasts on save actions.
-   * Render `Dependencies` as clickable tokens; flag unknown IDs inline.
-   * Warn when `story_points = 0` (knapsack ignores zero‑weight tasks).
+AI helper endpoints:
 
----
+- `/ai/anomalies`: overdue tasks, suspicious estimates, negative stock, stockout signals
+- `/ai/followups`: task follow-up recommendations
+- `/ai/engagement`: assignee bottleneck detection
+
+## Notes and Known Gaps
+
+- Root `requirements.txt` and `backend/requirements.txt` are not identical
+- Retraining requires `scikit-learn` and `joblib` available in runtime environment
+- `Start.txt` currently contains duplicate/unrelated lines and is not part of runtime logic
 
 ## License
 
-Private / demo use for evaluation.
-
----
-
-## Credits
-
-Built with FastAPI, pandas, Uvicorn, and NGINX; deployed via Docker Compose.
+Private/demo usage.
