@@ -1,0 +1,1255 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>TaskFlow Pro — Home</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    /* ===== Light theme palette ===== */
+    :root{
+      --bg:#eef2ff;            /* page background (very light indigo) */
+      --ink:#0f172a;           /* primary text (slate-900) */
+      --muted:#475569;         /* secondary text */
+      --brand:#6d28d9;         /* primary accent (violet-700) */
+      --brand-600:#7c3aed;
+      --card:#ffffffea;        /* glassy card */
+      --border:#e5e7eb;        /* light border */
+      --ok:#16a34a;
+      --warn:#dc2626;
+      --shadow:0 12px 30px rgba(2,6,23,0.08);
+      --ring:#c4b5fd;          /* focus ring */
+    }
+    html,body{margin:0;padding:0;background:
+      radial-gradient(1000px 500px at 15% -10%, #efe9ff 0, #eef2ff 60%, #f8fafc 100%) fixed;
+      color:var(--ink); font-family:ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial;}
+    a{color:var(--brand);text-decoration:none} a:hover{text-decoration:underline}
+
+    /* Top app bar */
+    .appbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.7);backdrop-filter:saturate(1.2) blur(10px);
+      border-bottom:1px solid var(--border)}
+    .wrap{max-width:1140px;margin:0 auto;padding:12px 16px}
+    .top{display:flex;align-items:center;gap:12px}
+    .logo{width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg,#a78bfa,#6d28d9);box-shadow:var(--shadow)}
+    .brand{font-weight:800;font-size:20px}
+    .api{margin-left:auto;font-size:12px;border:1px solid var(--border);padding:4px 8px;border-radius:999px;background:#fff}
+    .api .dot{display:inline-block;width:8px;height:8px;border-radius:999px;margin-right:6px;background:var(--ok)}
+
+    /* Tabs */
+    .tabs{display:flex;gap:8px;margin:14px 0 0;flex-wrap:wrap}
+    .tab{border:1px solid var(--border);background:#fff;border-radius:999px;padding:8px 14px;cursor:pointer}
+    .tab.active{background:#f8f5ff;border-color:#ede9fe;color:#4c1d95;font-weight:700}
+
+    .content{margin:18px auto;max-width:1140px;padding:0 16px}
+    .panel{display:none}
+    .panel.active{display:block}
+    .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:stretch}
+    .card{
+      background:var(--card); backdrop-filter:saturate(1.1) blur(6px);
+      border:1px solid var(--border); border-radius:16px; padding:18px; box-shadow: var(--shadow);
+    }
+    h2{margin:0 0 8px}
+    h3{margin:0 0 10px}
+    p.subtle{color:var(--muted);margin:8px 0 0}
+
+    .cta-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+    .btn{
+      border:1px solid var(--border); background:#ffffff; color:var(--ink);
+      padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600;
+      transition: box-shadow .15s ease, transform .05s ease;
+    }
+    .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .btn:focus{outline:none; box-shadow:0 0 0 3px var(--ring)}
+    .btn:hover{transform:translateY(-1px)}
+
+    .toolbar{display:flex;gap:10px;align-items:center;margin:6px 0 12px;flex-wrap:wrap}
+    input,select,textarea{border:1px solid var(--border);border-radius:12px;padding:8px 10px;background:#fff}
+    input:focus,select:focus,textarea:focus{outline:none; box-shadow:0 0 0 3px var(--ring)}
+    textarea{width:100%;min-height:90px}
+
+    table{border-collapse:collapse;width:100%}
+    th,td{border-bottom:1px solid #f1f5f9;padding:12px;text-align:left;vertical-align:top}
+    thead th{background:#f8fafc;color:#475569}
+    tbody tr:hover td{background:#f8faff}
+
+    .kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+    .k{border:1px solid var(--border);background:#fff;border-radius:12px;padding:12px}
+    .k h4{font-size:22px;margin:0}
+    .k span{color:var(--muted)}
+    .ok{color:var(--ok)} .warn{color:var(--warn)}
+    .ed{width:100%} .ed-num{width:110px}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+    .sku-id{display:inline-block;padding:2px 8px;border-radius:999px;background:#f1f5f9;border:1px solid #e2e8f0}
+
+    /* Scrollable table shells */
+    .grid { max-height: 70vh; overflow: auto; border: 1px solid var(--border); border-radius: 14px; }
+
+    /* Reusable wide table id so CSS applies to any panel */
+    #wideTable { min-width: 1400px; table-layout: fixed; }
+
+    #wideTable thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #fafaff;
+      box-shadow: inset 0 -1px 0 #f0f0f4;
+    }
+
+    /* ✅ More horizontal space so columns don't feel stuck */
+    #wideTable th,
+    #wideTable td {
+      padding: 10px 14px;
+      font-size: 13px;
+      white-space: nowrap;
+      border-bottom: 1px solid #eef2ff;
+    }
+
+    #wideTable td { vertical-align: middle; }
+
+    /* ✅ Inputs shouldn't touch cell edges */
+    #wideTable td input,
+    #wideTable td select {
+      width: calc(100% - 8px);
+      margin: 0 4px;
+    }
+
+    /* ✅ Optional but looks clean: subtle vertical separators */
+    #wideTable td + td,
+    #wideTable th + th {
+      border-left: 1px solid #eef2ff;
+    }
+
+    /* Column widths for prioritized */
+    #wideTable th:nth-child(1), #wideTable td:nth-child(1) { width: 90px; }   /* ID */
+    #wideTable th:nth-child(2), #wideTable td:nth-child(2) { width: 140px; }  /* Status */
+    #wideTable th:nth-child(3), #wideTable td:nth-child(3) { width: 360px; }  /* Title */
+    #wideTable th:nth-child(4), #wideTable td:nth-child(4) { width: 220px; }  /* Project */
+    #wideTable th:nth-child(5), #wideTable td:nth-child(5) { width: 220px; }  /* Assignee */
+    #wideTable th:nth-child(6), #wideTable td:nth-child(6) { width: 160px; }  /* Due */
+    #wideTable th:nth-child(7), #wideTable td:nth-child(7) { width: 120px; }  /* Impact */
+    #wideTable th:nth-child(8), #wideTable td:nth-child(8) { width: 140px; }  /* Story Points */
+    #wideTable th:nth-child(9), #wideTable td:nth-child(9) { width: 260px; }  /* Dependencies */
+
+    #wideTable td input[type="date"] { min-width: 160px; }
+
+    /* Column widths for prioritized */
+    .cols-pri-1 { width: 90px; }
+    .cols-pri-2 { width: 120px; }
+    .cols-pri-3 { width: 260px; }
+    .cols-pri-4 { width: 160px; }
+    .cols-pri-5 { width: 220px; }
+    .cols-pri-6 { width: 170px; }
+    .cols-pri-7 { width: 110px; }
+    .cols-pri-8 { width: 140px; }
+    .cols-pri-9 { width: 260px; }
+    .cols-pri-10 { width: 110px; }
+    .cols-pri-11 { width: 110px; }
+    .cols-pri-12 { width: 110px; }
+
+    /* Zebra rows */
+    #wideTable tbody tr:nth-child(odd) td { background: #fbfbff; }
+
+    /* Empty state */
+    .empty{display:flex;align-items:center;gap:10px;color:var(--muted)}
+
+    /* Collab notes output */
+    .noteItem{padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:12px}
+    .noteItem + .noteItem{margin-top:10px}
+    .muted{color:#64748b;font-size:12px}
+  </style>
+  <link rel="stylesheet" href="./global.css" />
+</head>
+<body>
+  <div class="appbar">
+    <div class="wrap top">
+      <div class="logo"></div>
+      <div class="brand">TaskFlow Pro</div>
+      <div class="api"><span class="dot" id="apiDot"></span><span id="apiBase">…</span></div>
+    </div>
+    <div class="wrap">
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-panel="home">Home</button>
+        <button class="tab" data-panel="prioritized">Prioritized Tasks</button>
+        <button class="tab" data-panel="sprint">Sprint Plan</button>
+        <button class="tab" data-panel="inventory">Inventory</button>
+        <button class="tab" data-panel="alerts">Inventory Alerts</button>
+        <button class="tab" data-panel="insights">Team Insights</button>
+        <button class="tab" data-panel="members">Members</button>
+        <button class="tab" data-panel="checks">Data Checks</button>
+        <button class="tab" data-panel="collab">Collab Notes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assignees datalist (used in tasks table) -->
+  <datalist id="assigneesList"></datalist>
+
+  <div class="content">
+    <!-- HOME -->
+    <div class="panel active" id="home">
+      <div class="hero">
+        <div class="card">
+          <h2>Welcome 👋</h2>
+          <p class="subtle">Inline editing + simple sprint planning + inventory health.</p>
+          <div class="kpis" id="homeKpis"></div>
+          <div class="cta-row">
+            <button class="btn primary" data-goto="prioritized">Go to Prioritized Tasks</button>
+            <button class="btn" data-goto="sprint">Open Sprint Planner</button>
+            <button class="btn" data-goto="inventory">Edit Inventory</button>
+            <button class="btn" data-goto="alerts">View Alerts</button>
+            <button class="btn" data-goto="collab">Open Collab Notes</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Quick start</h3>
+          <ol style="margin:8px 0 0;padding-left:18px;color:var(--muted)">
+            <li>Drop CSVs in <code>./data/</code>: <code>members.csv</code>, <code>tasks.csv</code>, <code>inventory.csv</code> (auto-created if missing).</li>
+            <li>Edit inline. Columns are fixed to keep schema stable during your demo.</li>
+            <li>Plan sprints (Greedy / Knapsack) by capacity.</li>
+            <li>Watch <b>Inventory Alerts</b> for at-risk SKUs.</li>
+            <li>If auth/RBAC is enabled, set your email + API key in <b>Collab Notes</b>.</li>
+          </ol>
+          <div class="toolbar"><button class="btn" id="refreshHome">Refresh</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIORITIZED -->
+    <div class="panel" id="prioritized">
+      <div class="card">
+        <h2>Prioritized Tasks</h2>
+        <p class="mono" style="opacity:0.7;margin-top:-6px;">
+          AI-assisted prioritization using delay-risk prediction + dependency analysis
+        </p>
+        <div class="toolbar">
+          <button class="btn" id="refreshPrioritized">Refresh</button>
+          <button class="btn" id="addTask">Add task</button>
+          <button class="btn primary" id="saveEdits">Save edits</button>
+          <button class="btn" id="toggleRiskSort">Sort by Risk: ON</button>
+        </div>
+        <div id="prioritizedTbl" class="grid"></div>
+      </div>
+    </div>
+
+    <!-- SPRINT -->
+    <div class="panel" id="sprint">
+      <div class="card">
+        <h2>Sprint Plan</h2>
+        <div class="toolbar">
+          <label>Capacity multiplier</label>
+          <input id="capMul" type="number" step="0.05" value="1.0" style="width:96px">
+          <label>Planner</label>
+          <select id="planner">
+            <option value="greedy" selected>Greedy</option>
+            <option value="knapsack">Knapsack (optimal)</option>
+          </select>
+          <button class="btn primary" id="planBtn">Plan Sprint</button>
+        </div>
+        <div id="planOut"></div>
+      </div>
+    </div>
+
+    <!-- INVENTORY (EDITABLE) -->
+    <div class="panel" id="inventory">
+      <div class="card">
+        <h2>Inventory</h2>
+        <div class="toolbar">
+          <button class="btn" id="refreshInv">Refresh</button>
+          <button class="btn primary" id="saveInv">Save edits</button>
+        </div>
+        <div id="invTbl" class="grid"></div>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="panel" id="alerts">
+      <div class="card">
+        <h2>Inventory Alerts</h2>
+        <div class="toolbar">
+          <label>Safety buffer (days)</label>
+          <input id="safetyBuf" type="number" value="2" style="width:90px">
+          <label>Forecast</label>
+          <select id="forecastMode">
+            <option value="sma">SMA</option>
+            <option value="holt">Holt linear</option>
+          </select>
+          <button class="btn" id="refreshAlerts">Refresh</button>
+          <span id="alertsMeta" class="mono" style="margin-left:10px; opacity:0.85;"></span>
+        </div>
+        <div id="alertsTbl" class="grid"></div>
+      </div>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div class="panel" id="insights">
+      <div class="card">
+        <h2>Team Insights</h2>
+        <div class="toolbar">
+          <button class="btn" id="refreshInsights">Refresh</button>
+          <button class="btn" id="llRefreshBtn">Refresh status</button>
+          <button class="btn primary" id="llRetrainBtn">Retrain now</button>
+          <a class="btn" id="llProofZip" href="#" target="_blank" rel="noreferrer">Download proof zip</a>
+          <span id="llStatus" class="mono" style="opacity:0.85;margin-left:8px;">Status: …</span>
+        </div>
+        <div id="insightsTbl" class="grid"></div>
+        <div id="insightsOut" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <!-- MEMBERS -->
+    <div class="panel" id="members">
+      <div class="card">
+        <h2>Members</h2>
+        <div class="toolbar">
+          <button class="btn" id="refreshMembers">Refresh</button>
+          <button class="btn" id="addMember">Add member</button>
+          <button class="btn primary" id="saveMembers">Save members</button>
+        </div>
+        <div id="membersTbl" class="grid"></div>
+      </div>
+    </div>
+
+    <!-- CHECKS -->
+    <div class="panel" id="checks">
+      <div class="card">
+        <h2>Data Checks</h2>
+        <div class="toolbar">
+          <button class="btn" id="runChecks">Run</button>
+        </div>
+        <div id="checksOut"></div>
+      </div>
+    </div>
+
+    <!-- COLLAB NOTES (AUTH + ENCRYPTED NOTES UI) -->
+    <div class="panel" id="collab">
+      <div class="card">
+        <h2>Collab Notes</h2>
+        <p class="subtle">Set your email + API key (RBAC), select a project, then add/refresh collaboration notes.</p>
+
+        <div class="toolbar" style="align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label class="muted">Email</label>
+            <input id="tfEmail" placeholder="email" style="min-width:240px" />
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label class="muted">API key</label>
+            <input id="tfKey" placeholder="api key" style="min-width:220px" />
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label class="muted">Project</label>
+            <select id="tfProject" style="min-width:200px"></select>
+          </div>
+
+          <button class="btn primary" id="tfSave">Set</button>
+          <button class="btn" id="tfWho">Who Am I</button>
+          <button class="btn" id="tfAudit">Audit</button>
+
+          <span id="authHint" class="mono" style="opacity:.75;margin-left:auto">Auth: …</span>
+        </div>
+
+        <hr style="opacity:.15;margin:14px 0;">
+
+        <h3>Encrypted Collaboration Notes</h3>
+        <textarea id="noteText" placeholder="Write a note…"></textarea>
+        <div class="toolbar">
+          <button class="btn primary" id="addNote">Add</button>
+          <button class="btn" id="loadNotes">Refresh</button>
+        </div>
+        <div id="notesOut"></div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+/* ---------- Config ---------- */
+const API = new URLSearchParams(location.search).get("api") || "/api";
+const apiBaseEl = document.getElementById('apiBase');
+apiBaseEl.textContent = API;
+
+window._riskSnapshot = window._riskSnapshot || null;
+
+/* ---------- Auth (RBAC headers) ---------- */
+function authState(){
+  return {
+    email: localStorage.getItem("tf_email") || "",
+    key: localStorage.getItem("tf_api_key") || "",
+    project: localStorage.getItem("tf_project_id") || ""
+  };
+}
+
+function authHeaders(extra = {}){
+  const a = authState();
+  const h = { ...(extra || {}) };
+  if (a.email) h["x-user-email"] = a.email;
+  if (a.key) h["x-api-key"] = a.key;
+  if (a.project) h["x-project-id"] = a.project;
+  return h;
+}
+
+async function fetchJSON(path, opts = {}){
+  const headersIn = opts.headers || {};
+  const method = (opts.method || "GET").toUpperCase();
+  const isForm = (opts.body instanceof FormData);
+
+  // If FormData, DO NOT set Content-Type (browser will set boundary)
+  const baseHeaders = isForm
+    ? authHeaders({ ...(headersIn || {}) })
+    : authHeaders({ "Content-Type": "application/json", ...(headersIn || {}) });
+
+  const r = await fetch(API + path, { ...opts, method, headers: baseHeaders });
+
+  if(!r.ok){
+    if(r.status===401) throw new Error("401 Unauthorized: set API key + email");
+    if(r.status===403) throw new Error("403 Forbidden: insufficient role");
+    const txt = await r.text().catch(()=> "");
+    throw new Error(txt || `${r.status} ${r.statusText}`);
+  }
+
+  const ct = (r.headers.get("content-type") || "").toLowerCase();
+  if (ct.includes("application/json")) return await r.json();
+  const t = await r.text();
+  try { return JSON.parse(t); } catch { return t; }
+}
+
+async function fetchText(path, opts = {}){
+  const headersIn = opts.headers || {};
+  const isForm = (opts.body instanceof FormData);
+  const baseHeaders = isForm
+    ? authHeaders({ ...(headersIn || {}) })
+    : authHeaders({ ...(headersIn || {}) });
+
+  const r = await fetch(API + path, { ...opts, headers: baseHeaders });
+  if(!r.ok){
+    if(r.status===401) throw new Error("401 Unauthorized: set API key + email");
+    if(r.status===403) throw new Error("403 Forbidden: insufficient role");
+    const txt = await r.text().catch(()=> "");
+    throw new Error(txt || `${r.status} ${r.statusText}`);
+  }
+  return await r.text();
+}
+
+function loadAuthUI(){
+  const a = authState();
+  const tfEmail = document.getElementById("tfEmail");
+  const tfKey   = document.getElementById("tfKey");
+  const tfProject = document.getElementById("tfProject");
+  if (tfEmail) tfEmail.value = a.email;
+  if (tfKey) tfKey.value = a.key;
+  if (tfProject) tfProject.value = a.project;
+  refreshAuthHint();
+}
+
+function refreshAuthHint(){
+  const a = authState();
+  const el = document.getElementById("authHint");
+  if(!el) return;
+  el.textContent = `Auth: ${a.email ? a.email : "-"} | key=${a.key ? "set" : "missing"} | proj=${a.project || "-"}`;
+}
+
+document.getElementById("tfSave")?.addEventListener("click", () => {
+  const tfEmail = document.getElementById("tfEmail");
+  const tfKey   = document.getElementById("tfKey");
+  const tfProject = document.getElementById("tfProject");
+
+  localStorage.setItem("tf_email", (tfEmail?.value || "").trim());
+  localStorage.setItem("tf_api_key", (tfKey?.value || "").trim());
+  localStorage.setItem("tf_project_id", (tfProject?.value || "").trim());
+
+  refreshAuthHint();
+  alert("Auth saved");
+});
+
+document.getElementById("tfWho")?.addEventListener("click", async () => {
+  try{
+    const me = await fetchJSON("/auth/whoami");
+    alert(`email=${me.email || "-"} role=${me.role || "-"}`);
+  }catch(e){
+    alert(e.message || String(e));
+  }
+});
+
+document.getElementById("tfAudit")?.addEventListener("click", () => {
+  window.open(API + "/admin/audit_log", "_blank");
+});
+
+document.getElementById("tfProject")?.addEventListener("change", () => {
+  const tfProject = document.getElementById("tfProject");
+  localStorage.setItem("tf_project_id", (tfProject?.value || "").trim());
+  refreshAuthHint();
+});
+
+/* ---------- Projects (shared for selects + auth project dropdown) ---------- */
+let PROJECTS = [];
+async function loadProjects(){
+  try {
+    const res = await fetchJSON("/export/projects");
+    const list = Array.isArray(res) ? res : (res.items || []);
+    PROJECTS = list || [];
+
+    // Fill auth project dropdown (project-only)
+    const tfProject = document.getElementById("tfProject");
+    if(tfProject){
+      const projOnly = PROJECTS.filter(p => (p.kind || "project") === "project");
+      tfProject.innerHTML = `<option value="">project</option>` +
+        projOnly.map(p => `<option value="${p.key}">${p.key}</option>`).join("");
+      tfProject.value = localStorage.getItem("tf_project_id") || "";
+    }
+  } catch(e){
+    PROJECTS = [];
+  }
+}
+
+const showTxt = (v) => (v === undefined || v === null ? "" : String(v));
+const showNum = (v) => { const n = Number(v); return Number.isFinite(n) ? String(n) : ""; };
+const edTxt = (v,cls="ed") => `<input class="${cls} tf-input" type="text" value="${showTxt(v)}">`;
+const edNum = (v,cls="ed-num") => `<input class="${cls} tf-input" type="number" step="0.1" value="${showNum(v)}">`;
+
+function projectSelect(current){
+  const list = (PROJECTS || []).filter(p => (p.kind || "project") === "project");
+  if(!list.length) return edTxt(current);
+
+  const opts = list.map(p =>
+    `<option value="${p.key}" ${String(current||"").toUpperCase()===String(p.key).toUpperCase() ? "selected":""}>
+      ${p.name} (${p.key})
+    </option>`
+  ).join("");
+
+  return `<select class="ed tf-input tf-select">${opts}</select>`;
+}
+
+function roleSelect(current){
+  const roles = (PROJECTS || []).filter(p => p.kind === "role");
+
+  // Fallback: no roles defined → free text input
+  if(!roles.length){
+    return `<input class="ed tf-input" type="text" value="${current || ""}">`;
+  }
+
+  const opts = [
+    `<option value="">Select role</option>`,
+    ...roles.map(r => {
+      const key = String(r.key || "").trim();
+      const name = String(r.name || r.key || "").trim();
+      const selected = String(current || "").trim() === key ? "selected" : "";
+      return `<option value="${key}" ${selected}>${name}</option>`;
+    })
+  ].join("");
+
+  return `<select class="ed tf-input tf-select">${opts}</select>`;
+}
+
+/* ===== Patch B1 (RBAC dropdown helper) ===== */
+function rbacRoleSelect(current){
+  const v = String(current || "").trim().toLowerCase() || "viewer";
+  const roles = ["viewer","user","admin"];
+  const opts = roles.map(r => {
+    const sel = (v === r) ? "selected" : "";
+    return `<option value="${r}" ${sel}>${r}</option>`;
+  }).join("");
+  return `<select class="ed tf-input tf-select">${opts}</select>`;
+}
+
+/* ---------- Tabs ---------- */
+const tabs = document.getElementById('tabs');
+
+window.addEventListener('keydown', (e)=>{
+  if ((e.ctrlKey || e.metaKey) && ['1','2','3','4','5','6','7','8','9'].includes(e.key)){
+    const map=['home','prioritized','sprint','inventory','alerts','insights','members','checks','collab'];
+    switchPanel(map[parseInt(e.key)-1]);
+  }
+});
+
+tabs.addEventListener('click', (e) => {
+  if (!e.target.classList.contains('tab')) return;
+  switchPanel(e.target.dataset.panel);
+});
+
+document.querySelectorAll('[data-goto]').forEach(btn=>{
+  btn.addEventListener('click',()=> switchPanel(btn.dataset.goto));
+});
+
+function switchPanel(id){
+  document.querySelectorAll(".tab").forEach(t =>
+    t.classList.toggle("active", t.dataset.panel === id)
+  );
+
+  document.querySelectorAll(".panel").forEach(p =>
+    p.classList.toggle("active", p.id === id)
+  );
+
+  if (id === "prioritized") { loadMembers(); loadPrioritized(); }
+  if (id === "sprint") { planSprint(); }
+  if (id === "inventory") { loadInventory(); }
+  if (id === "alerts") { loadAlerts(); }
+  if (id === "insights") { loadInsights(); }
+  if (id === "members") { loadMembers(); }
+
+  if (id === "collab") {
+    const a = authState();
+    const notesOut = document.getElementById("notesOut");
+
+    if (!a.email || !a.key) {
+      if (notesOut) {
+        notesOut.innerHTML =
+          `<p class="warn">Set your email + API key first, then Refresh.</p>`;
+      }
+      return;
+    }
+
+    loadNotes();
+  }
+}
+
+/* ---------- helpers ---------- */
+function wrapTable(headers, rows, wide=false){
+  const thead = "<thead><tr>"+headers.map((h,i)=>`<th class="${wide?`cols-pri-${i+1}`:''}">${h}</th>`).join("")+"</tr></thead>";
+  const tbody = "<tbody>"+(rows.length
+    ? rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")
+    : `<tr><td colspan="${headers.length}"><div class="empty">🗂️ <span>No data</span></div></td></tr>`)+"</tbody>";
+  const id = wide? 'wideTable' : '';
+  return `<table ${id?`id="${id}"`:''}>${thead}${tbody}</table>`;
+}
+
+let dirty = false;
+
+function setDirty(v){
+  dirty = !!v;
+  const btn = document.getElementById("saveEdits");
+  if (!btn) return;
+  btn.textContent = dirty ? "Save edits *" : "Save edits";
+}
+
+function statusSelect(current){
+  const opts=['Todo','In Progress','Ready','Blocked','Done'];
+  return `<select class="ed tf-input tf-select">${opts.map(o=>`<option ${String(current).toLowerCase()===o.toLowerCase()? 'selected':''}>${o}</option>`).join('')}</select>`;
+}
+
+/* ---------- Home KPIs ---------- */
+async function loadHome(){
+  try{
+    apiBaseEl.innerHTML = `<span class="dot"></span>${API}`;
+  }catch(e){
+    apiBaseEl.innerHTML = `<span style="color:#ef4444">●</span> API unreachable`;
+  }
+  const k = [];
+  try{const pri = await fetchJSON('/tasks/prioritized'); k.push({label:'Tasks', value: pri.count});}catch{}
+  try{const inv = await fetchJSON('/inventory/list'); k.push({label:'SKUs', value: inv.count});}catch{}
+  const box = document.getElementById('homeKpis');
+  box.innerHTML = k.length
+    ? k.map(x=>`<div class="k"><h4>${x.value}</h4><span>${x.label}</span></div>`).join("")
+    : `<div class="k"><span class="warn">API not reachable</span></div>`;
+}
+
+document.getElementById('refreshHome').onclick = loadHome;
+
+let riskSortOn = true;
+
+/* ---------- Members helpers (CSV) ---------- */
+function csvToRows(text){
+  const lines = text.trim() ? text.split(/\r?\n/) : [];
+  if(!lines.length) return {headers:[], rows:[]};
+  const headers = lines[0].split(',').map(s=>s.trim());
+  const rows = lines.slice(1).map(l=>{
+    const cols = l.split(',');
+    return Object.fromEntries(headers.map((h,i)=>[h, (cols[i]??'').trim()]));
+  });
+  return {headers, rows};
+}
+
+/* ---------- Members ---------- */
+async function loadMembers(){
+  try{
+    const text = await fetchText('/export/members?_ts=' + Date.now(), { cache: 'no-store' });
+    const {headers, rows} = csvToRows(text);
+
+    window._membersLastCount = (rows || []).filter(r => (r.email || "").trim()).length;
+
+    // populate datalist for assignees
+    const emails = rows.map(r=>r.email).filter(Boolean);
+    document.getElementById('assigneesList').innerHTML = emails.map(e=>`<option value="${e}">`).join('');
+
+    /* ===== Patch B2 (show job_role + rbac_role) ===== */
+    const dataRows = (rows||[]).map(x=>[
+      `<input class="ed tf-input" type="email" value="${x.email||''}">`,
+      `<input class="ed tf-input" type="text" value="${x.full_name||''}">`,
+
+      // job_role: prefer job_role, fallback to legacy role
+      roleSelect(x.job_role || x.role),
+
+      // rbac_role: viewer/user/admin
+      rbacRoleSelect(x.rbac_role || "viewer"),
+
+      `<input class="ed-num tf-input" type="number" step="0.5" value="${x.weekly_capacity||0}">`
+    ]);
+
+    document.getElementById('membersTbl').innerHTML =
+      wrapTable(['Email','Full name','Job role','RBAC role','Weekly capacity'], dataRows);
+
+  }catch(e){
+    document.getElementById('membersTbl').innerHTML = `<p class="warn">Could not load members: ${e.message}</p>`;
+  }
+}
+
+async function saveMembers() {
+  const table = document.querySelector('#membersTbl table');
+  if (!table) return;
+
+  // ✅ Collect rows safely (skip the "No data" row / malformed rows)
+  const rows = Array.from(table.querySelectorAll('tbody tr'))
+    .map(tr => {
+      const td = tr.querySelectorAll('td');
+
+      // ✅ skip empty-state / malformed row
+      if (!td || td.length < 5) return null;
+
+      const email = td[0]?.querySelector('input')?.value?.trim() || "";
+      if (!email) return null;
+
+      return {
+        email,
+        full_name: td[1]?.querySelector('input')?.value?.trim() || "",
+
+        // column 2 = job_role (project role)
+        job_role: td[2]?.querySelector('select, input')?.value?.trim() || "",
+
+        // column 3 = rbac_role (viewer/user/admin)
+        rbac_role: (td[3]?.querySelector('select, input')?.value?.trim() || "viewer").toLowerCase(),
+
+        weekly_capacity: td[4]?.querySelector('input')?.value?.trim() || "0"
+      };
+    })
+    .filter(Boolean);
+
+  // ✅ If nothing collected, don’t overwrite anything
+  if (!rows.length) {
+    alert("No valid member rows found. Not saving.");
+    return;
+  }
+
+  // ✅ Send to backend merge-upsert endpoint (NO CSV overwrite)
+  const res = await fetch(API + '/members/upsert_many', {
+    method: 'POST',
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(rows)
+  });
+
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    alert('Save members failed: ' + (txt || res.status));
+    return;
+  }
+
+  await loadMembers?.();
+  await loadInsights?.();
+  alert('Members saved!');
+}
+
+
+function addMemberRow(){
+  const tbl = document.querySelector('#membersTbl tbody');
+  if(!tbl) return;
+  const tr = document.createElement('tr');
+
+  // keep same columns as loadMembers table: Email, Full, Job role, RBAC role, Weekly capacity
+  tr.innerHTML = `<td><input class="ed tf-input" type="email" value=""></td>
+                  <td><input class="ed tf-input" type="text" value=""></td>
+                  <td>${roleSelect('')}</td>
+                  <td>${rbacRoleSelect('viewer')}</td>
+                  <td><input class="ed-num tf-input" type="number" step="0.5" value="0"></td>`;
+  tbl.appendChild(tr);
+}
+
+document.getElementById('refreshMembers')?.addEventListener('click', loadMembers);
+document.getElementById('addMember')?.addEventListener('click', addMemberRow);
+document.getElementById('saveMembers')?.addEventListener('click', ()=> saveMembers().catch(e=>alert(e.message)));
+
+/* ---------- Learning Loop Status ---------- */
+async function refreshLearningLoopStatus() {
+  const el = document.getElementById("llStatus");
+  if (!el) return;
+
+  try {
+    const health = await fetchJSON("/ai/health");
+    const stats  = await fetchJSON("/events/stats");
+
+    el.textContent =
+      `events=${stats.total}` +
+      ` | last=${stats.last_ts || "-"}` +
+      ` | model=${health.has_model ? "yes" : "no"}` +
+      ` | meta=${health.has_meta ? "yes" : "no"}`;
+
+    const proof = document.getElementById("llProofZip");
+    if (proof) proof.href = API + "/proof_bundle";
+
+  } catch (e) {
+    el.textContent = "Status unavailable";
+  }
+}
+
+document.getElementById("llRefreshBtn")?.addEventListener("click", refreshLearningLoopStatus);
+
+document.getElementById("llRetrainBtn")?.addEventListener("click", async () => {
+  const el = document.getElementById("llStatus");
+  el.textContent = "Retraining…";
+
+  try {
+    window._riskSnapshot = await fetchJSON("/ai/task_risk").catch(() => null);
+    await fetchJSON("/ai/retrain_task_risk", { method: "POST", body: JSON.stringify({}) }).catch(()=>({}));
+    await refreshLearningLoopStatus();
+    await loadInsights?.();
+
+    const after = await fetchJSON("/ai/task_risk").catch(() => null);
+
+    if (window._riskSnapshot?.risks && after?.risks) {
+      let changed = 0;
+      for (const k of Object.keys(after.risks)) {
+        if (window._riskSnapshot.risks[k] !== after.risks[k]) changed++;
+      }
+
+      const out = document.getElementById("insightsOut");
+      if (out) {
+        const prev = out.innerHTML || "";
+        out.innerHTML = `<div class="mono">Risk changed for ${changed} tasks after retrain.</div>` + prev;
+      }
+    }
+
+  } catch (e) {
+    el.textContent = "Retrain failed.";
+  }
+});
+
+/* ---------- Prioritized ---------- */
+async function loadPrioritized(){
+  const data = await fetchJSON('/tasks/prioritized');
+
+  // fetch risk map
+  let risks = {};
+  try {
+    const r = await fetchJSON('/ai/task_risk');
+    risks = r.risks || {};
+  } catch(e) {
+    risks = {};
+  }
+
+  const items = [...(data.items || [])];
+  if(riskSortOn){
+    items.sort((a, b) => {
+      const ra = Number(risks[String(a.id)] ?? 0);
+      const rb = Number(risks[String(b.id)] ?? 0);
+      return rb - ra;
+    });
+  }
+
+  const rows = items.map(x=>[
+    `<span class="mono">${x.id}</span>`,
+    statusSelect(x.status),
+    edTxt(x.title),
+    projectSelect(x.project),
+    `<input class="ed tf-input" list="assigneesList" value="${x.assignee_email||''}">`,
+    `<input class="ed tf-input" type="date" value="${x.due_date||""}">`,
+    edNum(x.impact),
+    edNum((x.story_points ?? 0)),
+    `<input class="ed dep tf-input" type="text" placeholder="e.g., T-1001, T-1002" value="${x.dependencies??""}">`,
+
+    (() => {
+      const p = Number(risks[String(x.id)] ?? 0);
+      const pct = Math.round(p * 100);
+      const cls = (pct >= 70) ? "warn" : (pct >= 40 ? "" : "ok");
+      return `<b class="${cls}" title="Predicted delay risk based on due date, dependencies, load">${pct}%</b>`;
+    })(),
+
+    `<span class="mono">${x.deps_open??0}</span>`,
+    `<span class="mono">${x.urgency_0_10??x.urgency??0}</span>`,
+    `<span class="mono">${(x.score??0).toFixed(2)}</span>`
+  ]);
+
+  document.getElementById('prioritizedTbl').innerHTML = wrapTable(
+    ["ID","Status","Title","Project","Assignee","Due","Impact","Story Points","Dependencies","Risk","Deps Open","Urgency","Score"],
+    rows,
+    true
+  );
+
+  setDirty(false);
+
+  const tbl = document.querySelector("#prioritizedTbl");
+  if (tbl) {
+    tbl.oninput = () => setDirty(true);
+    tbl.onchange = () => setDirty(true);
+  }
+}
+
+function _newTaskId(){
+  const ts = Date.now().toString(36).toUpperCase();
+  return `T-${ts}`;
+}
+function addTaskRow(){
+  const table = document.querySelector('#prioritizedTbl table');
+  if(!table){ return; }
+
+  const tbody = table.querySelector('tbody');
+  const id = _newTaskId();
+  const tr = document.createElement('tr');
+
+  tr.innerHTML = [
+    `<td><span class="mono">${id}</span></td>`,
+    `<td>${statusSelect('Todo')}</td>`,
+    `<td>${edTxt('')}</td>`,
+    `<td>${projectSelect('')}</td>`,
+    `<td><input class="ed tf-input" list="assigneesList" value=""></td>`,
+    `<td><input class="ed tf-input" type="date" value=""></td>`,
+    `<td>${edNum(3)}</td>`,
+    `<td>${edNum(1)}</td>`,
+    `<td><input class="ed dep tf-input" type="text" placeholder="e.g., T-1001, T-1002" value=""></td>`,
+    `<td><span class="mono">0</span></td>`,
+    `<td><span class="mono">0</span></td>`,
+    `<td><span class="mono">0</span></td>`,
+    `<td><span class="mono">0.00</span></td>`
+  ].join('');
+
+  tbody.prepend(tr);
+}
+
+async function logEvent(event_name, task_id, meta = {}) {
+  try {
+    await fetchJSON("/events/log", {
+      method: "POST",
+      body: JSON.stringify({
+        event_name,
+        task_id: task_id || "",
+        meta: meta || {},
+        ts: new Date().toISOString()
+      })
+    });
+  } catch (e) {}
+}
+
+async function saveEdits() {
+  const table = document.querySelector("#prioritizedTbl table");
+  if (!table) return;
+
+  const rows = Array.from(table.querySelectorAll("tbody tr")).map(tr => {
+    const td = tr.querySelectorAll("td");
+
+    const depsCell = td[8];
+    const depsRaw = depsCell?.querySelector("input")?.value || "";
+    const deps = depsRaw.split(",").map(s => s.trim()).filter(Boolean).join(", ");
+
+    const projCell = td[3];
+    const projEl = projCell?.querySelector("select") || projCell?.querySelector("input");
+
+    return {
+      id: td[0].innerText.trim(),
+      status: td[1].querySelector("select")?.value?.trim() || "",
+      title: td[2].querySelector("input")?.value?.trim() || "",
+      project: (projEl?.value || "").trim(),
+      assignee_email: td[4].querySelector("input")?.value?.trim() || "",
+      due_date: td[5].querySelector("input")?.value?.trim() || "",
+      impact: parseFloat(td[6].querySelector("input")?.value || "0"),
+      story_points: parseFloat(td[7].querySelector("input")?.value || "0"),
+      dependencies: deps
+    };
+  });
+
+  try {
+    await fetchJSON("/tasks/upsert_many", {
+      method: "POST",
+      body: JSON.stringify(rows)
+    });
+
+    // learning loop logging
+    logEvent("tasks_saved", "", { count: rows.length });
+    for (const r of rows) {
+      logEvent("task_edited", r.id, {
+        status: r.status,
+        due_date: r.due_date,
+        impact: r.impact,
+        story_points: r.story_points,
+        has_deps: !!(r.dependencies && r.dependencies.trim())
+      });
+      const st = (r.status || "").toLowerCase();
+      if (st === "done" || st === "completed") {
+        logEvent("task_saved_done", r.id, { status: r.status });
+      }
+    }
+
+    setDirty(false);
+    await loadPrioritized();
+    await planSprint();
+    await loadInsights();
+
+    // optional auto-retrain
+    if (typeof AUTO_RETRAIN_EVERY !== "undefined") {
+      window.savesSinceRetrain = (window.savesSinceRetrain || 0) + 1;
+      if (window.savesSinceRetrain >= AUTO_RETRAIN_EVERY) {
+        window.savesSinceRetrain = 0;
+        try {
+          await fetchJSON("/ai/retrain_task_risk", { method: "POST", body: JSON.stringify({}) });
+          logEvent("auto_retrain_triggered", "", { n: AUTO_RETRAIN_EVERY });
+          await loadInsights();
+        } catch (_) {}
+      }
+    }
+  } catch (e) {
+    alert("Save failed: " + (e?.message || e));
+    setDirty(true);
+  }
+}
+
+document.getElementById('refreshPrioritized').onclick = loadPrioritized;
+document.getElementById('saveEdits').onclick = saveEdits;
+document.getElementById('addTask').onclick = addTaskRow;
+document.getElementById('toggleRiskSort').onclick = () => {
+  riskSortOn = !riskSortOn;
+  document.getElementById('toggleRiskSort').textContent = `Sort by Risk: ${riskSortOn ? "ON" : "OFF"}`;
+  loadPrioritized();
+};
+
+/* ---------- Sprint Planner ---------- */
+async function planSprint(){
+  try{
+    const mult = parseFloat(document.getElementById('capMul').value || "1.0");
+    const planner = (document.getElementById('planner').value || 'greedy').toLowerCase();
+    const payload = {
+      capacity_multiplier: isFinite(mult)? mult : 1.0,
+      include_statuses: ['todo','in progress','ready','blocked'],
+      max_days: 7,
+      planner
+    };
+    const d = await fetchJSON('/tasks/plan_sprint',{method:'POST', body:JSON.stringify(payload)});
+    const rowsSum = (d.summary||[]).map(x=>[
+      x.assignee_email || '__unassigned__',
+      x.capacity ?? 0,
+      x.planned_points ?? 0,
+      x.remaining ?? 0,
+      ((x.planned_points||0) && (x.capacity||0)) ? ((x.planned_points/x.capacity)*100).toFixed(0)+'%' : '0%',
+      x.num_tasks ?? 0
+    ]);
+    const rowsPlan = Object.entries(d.plan||{}).map(([owner, items])=>[
+      `<b>${owner||'__unassigned__'}</b>`,
+      (items||[]).map(t=>`${t.id} (${t.story_points??0})`).join(', ') || '<i>—</i>'
+    ]);
+    const rowsBacklog = (d.backlog||[]).map(b=>[
+      b.id, b.intended_owner||'__unassigned__', b.story_points??0, b.reason_unassigned||''
+    ]);
+    document.getElementById('planOut').innerHTML =
+      `<h3>Summary</h3>${wrapTable(['Member','Capacity','Planned','Remaining','Util','Tasks'], rowsSum)}
+       <h3 style="margin-top:14px">Plan</h3>${wrapTable(['Owner','Tasks (id pts)'], rowsPlan)}
+       <h3 style="margin-top:14px">Backlog</h3>${wrapTable(['Backlog id','Owner','Pts','Reason'], rowsBacklog)}`;
+  }catch(e){
+    document.getElementById('planOut').innerHTML = `<p class="warn">Could not plan sprint: ${e.message}</p>`;
+    console.error(e);
+  }
+}
+
+document.getElementById('planBtn').onclick = planSprint;
+
+/* ---------- Inventory (editable) ---------- */
+async function loadInventory(){
+  const data = await fetchJSON('/inventory/list');
+  const rows = (data.items||[]).map(x=>[
+    `<span class="sku-id">${x.sku}</span>`,
+    edTxt(x.name),
+    edNum(x.on_hand),
+    edNum(x.reserved ?? 0),
+    edNum(x.reorder_point ?? 0),
+    edNum(x.lead_time_days ?? 0),
+    edNum(x.avg_daily_use ?? 0)
+  ]);
+  document.getElementById('invTbl').innerHTML = wrapTable(
+    ["SKU","Name","On hand","Reserved","Reorder point","Lead time (d)","Avg/day"], rows
+  );
+}
+
+async function saveInventoryEdits(){
+  const table = document.querySelector("#invTbl table"); if(!table) return;
+  const rows = Array.from(table.querySelectorAll("tbody tr")).map(tr=>{
+    const td = tr.querySelectorAll("td");
+    return {
+      sku: td[0].innerText.trim(),
+      name: td[1].querySelector("input").value,
+      on_hand: parseFloat(td[2].querySelector("input").value||"0"),
+      reserved: parseFloat(td[3].querySelector("input").value||"0"),
+      reorder_point: parseFloat(td[4].querySelector("input").value||"0"),
+      lead_time_days: parseFloat(td[5].querySelector("input").value||"0"),
+      avg_daily_use: parseFloat(td[6].querySelector("input").value||"0")
+    };
+  });
+  await fetchJSON('/inventory/upsert_many',{method:'POST', body:JSON.stringify({rows})});
+  await loadInventory(); await loadAlerts();
+}
+
+document.getElementById('refreshInv').onclick = loadInventory;
+document.getElementById('saveInv').onclick = saveInventoryEdits;
+
+/* ---------- Alerts ---------- */
+async function loadAlerts(){
+  const buf = parseInt(document.getElementById('safetyBuf').value || "2");
+  const use_ml = document.getElementById('forecastMode').value === 'holt';
+
+  const data = await fetchJSON(`/inventory?safety_buffer=${buf}&use_ml=${use_ml?"true":"false"}`);
+
+  const meta = document.getElementById('alertsMeta');
+  if(meta){
+    meta.textContent = `Model used: ${data.used_model || (use_ml ? "holt_linear" : "sma")}`;
+  }
+
+  const atRisk = (data.items||[]).filter(x=>x.at_risk);
+
+  const rows = atRisk.map(x=>[
+    `<span class="sku-id">${x.sku}</span>`,
+    x.name,
+    `<span class="mono">${x.on_hand}</span>`,
+    `<span class="mono">${x.reserved}</span>`,
+    `<span class="mono">${x.avg_daily_use}</span>`,
+    `<span class="mono">${x.avg_daily_use_source || ""}</span>`,
+    `<b class="${x.at_risk?'warn':'ok'}">${x.days_to_stockout}</b>`
+  ]);
+
+  document.getElementById('alertsTbl').innerHTML = wrapTable(
+    ["SKU","Name","On hand","Reserved","Avg/day","Rate source","Days to stockout"],
+    rows
+  );
+}
+
+document.getElementById('refreshAlerts').onclick = loadAlerts;
+document.getElementById('forecastMode').onchange = loadAlerts;
+document.getElementById('safetyBuf').onchange = loadAlerts;
+
+/* ---------- Insights ---------- */
+async function loadInsights(){
+  const d = await fetchJSON('/team/insights', {
+    method: 'POST',
+    body: JSON.stringify({})
+  });
+
+  const rows = (d.per_member || []).map(m => [
+    m.assignee_email,
+    m.capacity,
+    m.planned_points,
+    m.remaining,
+    (m.utilization_pct || 0).toFixed(0) + "%"
+  ]);
+
+  document.getElementById('insightsTbl').innerHTML =
+    wrapTable(["Member","Capacity","Planned","Remaining","Util"], rows);
+
+  let e = { ok:true, bottlenecks:[] };
+  try { e = await fetchJSON('/ai/engagement'); } catch(err) {}
+
+  const out = document.getElementById('insightsOut');
+  if (!out) return;
+
+  if (e.bottlenecks && e.bottlenecks.length) {
+    out.innerHTML = `
+      <h3>AI-Detected Bottlenecks</h3>
+      <ul>
+        ${e.bottlenecks.map(b =>
+          `<li><code>${b.assignee}</code> — ${b.high_risk} high-risk tasks (${b.tasks} active)</li>`
+        ).join("")}
+      </ul>
+    `;
+  } else {
+    out.innerHTML = `<p class="mono" style="opacity:0.7;">AI-Detected Bottlenecks: none</p>`;
+  }
+}
+
+document.getElementById('refreshInsights').onclick = loadInsights;
+
+/* ---------- Checks ---------- */
+async function runValidation(){
+  const v = await fetchJSON('/data/validate');
+
+  let a = { ok:true, anomalies:{tasks:[], inventory:[]} };
+  try { a = await fetchJSON('/ai/anomalies'); } catch(e) {}
+
+  let f = { ok:true, followups:[] };
+  try { f = await fetchJSON('/ai/followups'); } catch(e) {}
+
+  const followHtml = (f.followups||[]).length
+    ? `<h3>Automated Follow-ups</h3>
+      <ul>
+        ${f.followups.map(x =>
+          `<li><code>${x.id}</code> — ${x.reason} (risk ${x.risk}%)</li>`
+        ).join("")}
+      </ul>`
+    : "";
+
+  const p = v.problems || {};
+  const okBadge = v.ok
+    ? `<p class="ok"><b>OK:</b> No issues found ✅</p>`
+    : `<p class="warn"><b>Issues found</b> — fix before submitting</p>`;
+
+  function list(title, arr, mapLi){
+    if(!arr || !arr.length) return "";
+    return `<h4>${title}</h4><ul>${arr.map(mapLi).join("")}</ul>`;
+  }
+
+  const an = a.anomalies || {};
+  const html = okBadge
+    + list("Missing columns", p.missing_columns, x=>`<li><code>${x}</code></li>`)
+    + list("Duplicate task IDs", p.duplicate_task_ids, x=>`<li><code>${x}</code></li>`)
+    + list("Bad due dates", p.bad_due_dates, x=>`<li>${x.id} — <code>${x.due_date}</code></li>`)
+    + list("Unknown assignees", p.unknown_assignees, x=>`<li>${x.id} — <code>${x.assignee_email}</code></li>`)
+    + list("Unknown dependencies", p.unknown_dependencies, x=>`<li>${x.id} → <code>${x.missing_dep}</code></li>`)
+    + list("Negative or non-numeric points/impact", p.negative_or_non_numeric_points, x=>`<li>${x.id}</li>`)
+    + `<hr style="opacity:0.15;margin:12px 0;">`
+    + `<h3>AI Anomalies</h3>`
+    + list("Task anomalies", an.tasks, x=>`<li><code>${x.id}</code> — <b>${x.type}</b>: ${x.reason}</li>`)
+    + list("Inventory anomalies", an.inventory, x=>`<li><code>${x.sku}</code> — <b>${x.type}</b>: ${x.reason}</li>`)
+    + followHtml;
+
+  document.getElementById('checksOut').innerHTML = html;
+}
+
+document.getElementById('runChecks').onclick = runValidation;
+
+/* ---------- Collab Notes ---------- */
+async function loadNotes(){
+  const notesOut = document.getElementById("notesOut");
+  if(!notesOut) return;
+
+  try{
+    const r = await fetchJSON("/collab/notes");
+    const items = (r.items || []);
+    notesOut.innerHTML = items.length
+      ? items.map(n => `
+          <div class="noteItem">
+            <div><b>${n.author || "-"}</b> <span class="muted mono">${n.ts || ""}</span></div>
+            <div style="margin-top:6px">${(n.text || "").replaceAll("\n","<br/>")}</div>
+          </div>
+        `).join("")
+      : `<p class="mono" style="opacity:.7">No notes yet.</p>`;
+  }catch(e){
+    notesOut.innerHTML = `<p class="warn">${e.message || e}</p>`;
+  }
+}
+
+document.getElementById("loadNotes")?.addEventListener("click", loadNotes);
+
+document.getElementById("addNote")?.addEventListener("click", async () => {
+  const noteText = document.getElementById("noteText");
+  const text = (noteText?.value || "").trim();
+  if(!text) return;
+
+  try{
+    await fetchJSON("/collab/notes", { method:"POST", body: JSON.stringify({ text }) });
+    noteText.value = "";
+    await loadNotes();
+  }catch(e){
+    alert(e.message || String(e));
+  }
+});
+
+/* ---------- Init ---------- */
+loadAuthUI();
+loadProjects().then(loadAuthUI).catch(()=>{});
+
+loadHome();
+refreshLearningLoopStatus();
+</script>
+
+</body>
+</html>

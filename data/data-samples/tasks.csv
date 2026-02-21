@@ -1,0 +1,8 @@
+id,title,project,assignee_email,status,due_date,story_points,impact,dependencies
+T-1000,Design checkout flow,Merchant Portal,aarav@grapepay.com,In Progress,2025-10-15,3,4,
+T-1001,Integrate UPI QR,Merchant Portal,aarav@grapepay.com,Todo,2025-10-20,5,5,T-1000
+T-1002,Set up SMS OTP service,Ops,isha@grapepay.com,Todo,2025-10-18,3,3,
+T-2001,Build settings page,Merchant Portal,meera@grapepay.com,Todo,2025-10-30,5,3,
+T-2002,Refactor profile component,Merchant Portal,meera@grapepay.com,Todo,2025-11-02,3,2,T-2001
+T-3001,Regression test suite,QA,dev@grapepay.com,Todo,2025-10-28,3,2,
+T-3002,API test coverage (90%),QA,dev@grapepay.com,Todo,2025-11-01,5,3,T-1001

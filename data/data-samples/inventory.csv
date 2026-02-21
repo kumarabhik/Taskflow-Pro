@@ -1,0 +1,4 @@
+sku,name,on_hand,reorder_point,lead_time_days
+POS-TERMINAL,POS Terminal Devices,50,30,10
+SMS-CREDIT,SMS OTP Credits,20000,15000,2
+SDK-LICENSE,3P SDK Licenses,25,20,7

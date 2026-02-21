@@ -1,0 +1,9 @@
+[
+  {"key": "PORTAL", "name": "Merchant Portal"},
+  {"key": "OPS", "name": "Operations"},
+  {"key": "QA", "name": "Quality Assurance"},
+  {"key": "BILLING", "name": "Billing"},
+  {"key": "PAY", "name": "Payments"},
+  {"key": "ANALYTICS", "name": "Analytics"},
+  {"key": "MOB", "name": "Mobile App"}
+]

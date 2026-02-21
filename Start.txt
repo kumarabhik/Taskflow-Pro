@@ -1,0 +1,12 @@
+2️⃣ reservations.csv
+
+Append one new row:
+
+R-006,T-5001,HEADSET,10,2025-10-18,2025-10-18
+
+
+2️⃣ reservations.csv
+
+Append one new row:
+
+R-006,T-5001,HEADSET,10,2025-10-18,2025-10-18

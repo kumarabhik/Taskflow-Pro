@@ -1,0 +1,11 @@
+[
+  {"kind":"project","key":"PORTAL","name":"Merchant Portal"},
+  {"kind":"project","key":"MOB","name":"Mobile App"},
+  {"kind":"project","key":"PAY","name":"Payments"},
+
+  {"kind":"role","key":"Backend","name":"Backend"},
+  {"kind":"role","key":"Frontend","name":"Frontend"},
+  {"kind":"role","key":"QA","name":"QA"},
+  {"kind":"role","key":"Ops","name":"Ops"},
+  {"kind":"role","key":"LLM","name":"LLM"}
+]

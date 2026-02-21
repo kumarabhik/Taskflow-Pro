@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Local env/config
+.env
+.env.*
+*.local
+
+# Logs/runtime
+*.log
+logs/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build/cache artifacts
+build/
+dist/
+*.egg-info/
+
+# Project-generated artifacts
+output/
+data/task_risk_model.joblib
+data/task_risk_model.meta.json
+data/weights.json
+data/audit.log
+backend/__pycache__/

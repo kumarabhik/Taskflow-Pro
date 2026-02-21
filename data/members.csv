@@ -1,0 +1,18 @@
+email,full_name,job_role,rbac_role,weekly_capacity
+aarav@grapepay.com,Aarav Sharma,,admin,20.0
+isha@grapepay.com,Isha Kapoor,,user,15.0
+meera@grapepay.com,Meera Rao,,user,16.0
+dev@grapepay.com,Dev Patel,,viewer,12.0
+ad@grapepay.com,Adi Chaudhary,,user,20.0
+ak@grapepay.com,Abhi Kumar,,admin,25.0
+avi@grapepay.com,Avi Singh,,user,20.0
+an@grapepay.com,Anku,,viewer,25.0
+abhi@grapepay.com,Abhi,,user,14.0
+adi@grapepay.com,Adi,,viewer,15.0
+neel@grapepay.com,Neel,,viewer,20.0
+arnav@gmail.com,Arnav,,user,25.0
+abhinav@gmail.com,Abhinav,,viewer,17.0
+aditya@gmail.com,Aditya,Ops,user,15.0
+abhi@yahoo.com,Abhishek,Frontend,user,16.0
+kumarabhik@gmail.com,Abhik,,user,15.0
+abhi@gmail.com,Abhi,QA,user,20.0

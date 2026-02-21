@@ -1,0 +1,30 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: taskflow-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TF_AUTH=0
+      - TF_API_KEYS={"admin":"dev-admin-key","user":"dev-user-key","viewer":"dev-viewer-key"}
+    command: uvicorn backend.app:app --host 0.0.0.0 --port 8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: taskflow-web
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "8080:80"
